@@ -22,6 +22,6 @@ const useJobItem = (id: number | null) => {
     fetchData();
   }, [id]);
 
-  return [jobItem, isLoading] as const;
+  return { jobItem, isLoading };
 };
 export default useJobItem;
