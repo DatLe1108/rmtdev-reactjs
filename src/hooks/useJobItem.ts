@@ -1,27 +1,40 @@
-import { useEffect, useState } from "react";
+import { useQuery } from "@tanstack/react-query";
+
 import { BASE_API_URL } from "../constant/api";
 import { JobItemExpanded } from "../constant/types";
 
+type JobItemApiResponse = {
+  public: boolean;
+  jobItem: JobItemExpanded;
+};
+
+const fetchJobItem = async (id: number): Promise<JobItemApiResponse> => {
+  const response = await fetch(`${BASE_API_URL}/${id}`);
+
+  if (!response.ok) {
+    const errorData = await response.json();
+    throw new Error(errorData.description);
+  }
+
+  const data = await response.json();
+  return data;
+};
+
 const useJobItem = (id: number | null) => {
-  const [jobItem, setJobItem] = useState<JobItemExpanded | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (!id) {
-      return;
+  const { data, isInitialLoading } = useQuery(
+    ["job-item", id],
+    () => (id ? fetchJobItem(id) : null),
+    {
+      staleTime: 1000 * 60 * 60,
+      refetchOnWindowFocus: false,
+      retry: false,
+      enabled: Boolean(id),
+      onError: (error) => {
+        console.log(error);
+      },
     }
+  );
 
-    const fetchData = async () => {
-      setIsLoading(true);
-      const response = await fetch(`${BASE_API_URL}/${id}`);
-      const data = await response.json();
-      setIsLoading(false);
-      setJobItem(data.jobItem);
-    };
-
-    fetchData();
-  }, [id]);
-
-  return { jobItem, isLoading };
+  return { jobItem: data?.jobItem, isLoading: isInitialLoading };
 };
 export default useJobItem;
