@@ -16,29 +16,48 @@ import useJobItems from "../hooks/useJobItems";
 import useDebounce from "../hooks/useDebounce";
 import { Toaster } from "react-hot-toast";
 import { RESULTS_PER_PAGE } from "../constant/pagination";
+import { PageDirection, SortBy } from "../constant/types";
 
 function App() {
   const [searchText, setSearchText] = useState("");
   const debouncedSearchText = useDebounce(searchText, 250);
   const { jobItems, isLoading } = useJobItems(debouncedSearchText);
   const [currentPage, setCurrentPage] = useState(1);
+  const [sortBy, setSortBy] = useState<SortBy>("relevant");
 
   const totalNumberOfJobItems = jobItems?.length || 0;
   const totalNumberOfPages = Math.ceil(
     totalNumberOfJobItems / RESULTS_PER_PAGE
   );
-  const jobItemsSliced =
-    jobItems?.slice(
-      currentPage * RESULTS_PER_PAGE - RESULTS_PER_PAGE,
-      currentPage * RESULTS_PER_PAGE
-    ) || [];
+  const jobItemsSorted = [...(jobItems || [])].sort((a, b) => {
+    if (sortBy === "relevant") {
+      return b.relevanceScore - a.relevanceScore;
+    } else {
+      return a.daysAgo - b.daysAgo;
+    }
+  });
 
-  const handleChangePage = (direction: "next" | "previous") => {
+  const jobItemsSortedAndSliced = jobItemsSorted.slice(
+    currentPage * RESULTS_PER_PAGE - RESULTS_PER_PAGE,
+    currentPage * RESULTS_PER_PAGE
+  );
+
+  const handleSearchTextChange = (searchTerm: string) => {
+    setSearchText(searchTerm);
+    setCurrentPage(1);
+  };
+
+  const handleChangePage = (direction: PageDirection) => {
     if (direction === "next") {
       setCurrentPage((prev) => prev + 1);
     } else if (direction === "previous") {
       setCurrentPage((prev) => prev - 1);
     }
+  };
+
+  const handleChangeSortBy = (newSortBy: SortBy) => {
+    setSortBy(newSortBy);
+    setCurrentPage(1);
   };
 
   return (
@@ -53,7 +72,7 @@ function App() {
 
         <SearchForm
           searchText={searchText}
-          onSearchTextChange={setSearchText}
+          onSearchTextChange={handleSearchTextChange}
         />
       </Header>
 
@@ -61,10 +80,10 @@ function App() {
         <Sidebar>
           <SidebarTop>
             <ResultsCount totalNumberOfJobItems={totalNumberOfJobItems} />
-            <SortingControls />
+            <SortingControls sortBy={sortBy} onClick={handleChangeSortBy} />
           </SidebarTop>
 
-          <JobList jobItems={jobItemsSliced} isLoading={isLoading} />
+          <JobList jobItems={jobItemsSortedAndSliced} isLoading={isLoading} />
 
           <PaginationControls
             currentPage={currentPage}

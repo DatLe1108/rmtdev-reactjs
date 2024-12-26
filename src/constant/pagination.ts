@@ -1,1 +1,1 @@
-export const RESULTS_PER_PAGE = 20;
+export const RESULTS_PER_PAGE = 7;
