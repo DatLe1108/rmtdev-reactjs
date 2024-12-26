@@ -1,6 +1,7 @@
 import { useQuery } from "@tanstack/react-query";
 import { JobItem } from "../constant/types";
 import { BASE_API_URL } from "../constant/api";
+import { handleError } from "../utils/utils";
 
 type JobItemsApiResponse = {
   public: boolean;
@@ -31,9 +32,7 @@ const useJobItems = (searchText: string) => {
       refetchOnWindowFocus: false,
       retry: false,
       enabled: Boolean(searchText),
-      onError: (error) => {
-        console.log(error);
-      },
+      onError: handleError,
     }
   );
   return { jobItems: data?.jobItems, isLoading: isInitialLoading };
