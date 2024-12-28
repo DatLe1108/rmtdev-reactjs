@@ -1,4 +1,3 @@
-import { useState } from "react";
 import Background from "./Background";
 import Container from "./Container";
 import Footer from "./Footer";
@@ -11,55 +10,10 @@ import JobItemContent from "./JobItemContent";
 import ResultsCount from "./ResultsCount";
 import SortingControls from "./SortingControls";
 import PaginationControls from "./PaginationControls";
-import JobList from "./JobList";
-import useDebounce from "../hooks/useDebounce";
 import { Toaster } from "react-hot-toast";
-import { RESULTS_PER_PAGE } from "../constant/pagination";
-import { PageDirection, SortBy } from "../constant/types";
-import useSearchQuery from "../hooks/useSearchQuery";
+import JobListSearch from "./JobListSearch";
 
 function App() {
-  const [searchText, setSearchText] = useState("");
-  const debouncedSearchText = useDebounce(searchText, 250);
-  const { jobItems, isLoading } = useSearchQuery(debouncedSearchText);
-  const [currentPage, setCurrentPage] = useState(1);
-  const [sortBy, setSortBy] = useState<SortBy>("relevant");
-
-  const totalNumberOfJobItems = jobItems?.length || 0;
-  const totalNumberOfPages = Math.ceil(
-    totalNumberOfJobItems / RESULTS_PER_PAGE
-  );
-  const jobItemsSorted = [...(jobItems || [])].sort((a, b) => {
-    if (sortBy === "relevant") {
-      return b.relevanceScore - a.relevanceScore;
-    } else {
-      return a.daysAgo - b.daysAgo;
-    }
-  });
-
-  const jobItemsSortedAndSliced = jobItemsSorted.slice(
-    currentPage * RESULTS_PER_PAGE - RESULTS_PER_PAGE,
-    currentPage * RESULTS_PER_PAGE
-  );
-
-  const handleSearchTextChange = (searchTerm: string) => {
-    setSearchText(searchTerm);
-    setCurrentPage(1);
-  };
-
-  const handleChangePage = (direction: PageDirection) => {
-    if (direction === "next") {
-      setCurrentPage((prev) => prev + 1);
-    } else if (direction === "previous") {
-      setCurrentPage((prev) => prev - 1);
-    }
-  };
-
-  const handleChangeSortBy = (newSortBy: SortBy) => {
-    setSortBy(newSortBy);
-    setCurrentPage(1);
-  };
-
   return (
     <>
       <Background />
@@ -70,26 +24,19 @@ function App() {
           <BookmarksButton />
         </HeaderTop>
 
-        <SearchForm
-          searchText={searchText}
-          onSearchTextChange={handleSearchTextChange}
-        />
+        <SearchForm />
       </Header>
 
       <Container>
         <Sidebar>
           <SidebarTop>
-            <ResultsCount totalNumberOfJobItems={totalNumberOfJobItems} />
-            <SortingControls sortBy={sortBy} onClick={handleChangeSortBy} />
+            <ResultsCount />
+            <SortingControls />
           </SidebarTop>
 
-          <JobList jobItems={jobItemsSortedAndSliced} isLoading={isLoading} />
+          <JobListSearch />
 
-          <PaginationControls
-            currentPage={currentPage}
-            totalNumberOfPages={totalNumberOfPages}
-            onClick={handleChangePage}
-          />
+          <PaginationControls />
         </Sidebar>
         <JobItemContent />
       </Container>
